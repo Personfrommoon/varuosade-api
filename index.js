@@ -41,10 +41,14 @@ function search(query) {
     return htmlResults;
 }
 
+
+// home page
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 
+
+// parts in stock
 app.get('/search', function (req, res) {
     const query = req.query.q;
     if (!query) {
@@ -54,7 +58,7 @@ app.get('/search', function (req, res) {
     res.send(searchResults);
 });
 
-
+// every part that has been/is in storage
 app.get('/spare-parts-all', function (req, res) {
     let html = '<html><head><title>Spare Parts</title></head><body><h1>Spare Parts</h1><ul>';
     results.forEach(part => {
@@ -75,6 +79,8 @@ app.get('/spare-parts-all', function (req, res) {
     res.send(html);
 });
 
+
+// spare parts 30 on a page
 app.get('/spare-parts', function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const sortOrder = req.query.sort || 'asc'; 
@@ -127,8 +133,9 @@ app.get('/spare-parts', function (req, res) {
     if (page < totalPages) 
     { lastPage = `/spare-parts?page=${page - 1}`; }
 
-
+    // go to prev page btn
     if (lastPage) { html += `<a href="${lastPage}"><button>Last Page</button></a>`; } 
+    // go to next page btn
     if (nextPage) { html += `<a href="${nextPage}"><button>Next Page</button></a>`; }
  
     html += `
