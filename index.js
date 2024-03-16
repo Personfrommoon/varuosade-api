@@ -48,9 +48,9 @@ app.get('/', function (req, res) {
 });
 
 
-// parts in stock
+// parts in stock with search
 app.get('/search', function (req, res) {
-    const query = req.query.q;
+    const query = req.query.partName;
     if (!query) {
         return res.send('No query specified');
     }
