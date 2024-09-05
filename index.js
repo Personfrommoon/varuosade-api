@@ -100,7 +100,7 @@ app.get('/spare-parts', function (req, res) {
     let partsOnPage = filteredResults.slice(startIndex, endIndex);
 
     if (sortOrder === 'asc') {
-        partOnPage.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+        partsOnPage.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
     } else if (sortOrder === 'desc') {
         partsOnPage.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
     }
