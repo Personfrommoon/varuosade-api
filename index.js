@@ -5,6 +5,7 @@ const app = express();
 const results = [];
 const itemsPerPage = 30;
 
+// CSV shit
 fs.createReadStream('./LE.txt')
     .pipe(csv({
         headers: ["id", "name", "storage1", "storage2", "storage3", "storage4", "storage5", "storage6", "price", "model", "finalPrice"],
@@ -14,81 +15,72 @@ fs.createReadStream('./LE.txt')
         results.push(data);
     });
 
+// Lic localhost:3000
+app.get('/', function (req, res) {
+    res.json({ message: 'Welcome to the Spare Parts API' });
+});
+
+// Otsingu func
 function search(query) {
-    const filteredResults = results.filter(item => {
-        return item.name.toLowerCase().includes(query.toLowerCase()) || 
-               item.price.toLowerCase().includes(query.toLowerCase()) || 
-               (parseInt(item.storage1) > 0 || parseInt(item.storage2) > 0 || parseInt(item.storage3) > 0 || parseInt(item.storage4) > 0 || parseInt(item.storage5) > 0 || parseInt(item.storage6) > 0);
+    return results.filter(item => {
+        const nameMatch = item.name && item.name.toLowerCase().includes(query.toLowerCase());
+        const priceMatch = item.price && item.price.toLowerCase().includes(query.toLowerCase());
+        return nameMatch || priceMatch;
     });
-
-    let htmlResults = "<ul>";
-    filteredResults.forEach(item => {
-        let inStock = false;
-        if (
-            parseInt(item.storage1) > 0 || 
-            parseInt(item.storage2) > 0 || 
-            parseInt(item.storage3) > 0 || 
-            parseInt(item.storage4) > 0 || 
-            parseInt(item.storage5) > 0 || 
-            parseInt(item.storage6) > 0
-        ) {
-            inStock = true;
-        }
-        htmlResults += `<li>Name: ${item.name}, Model: ${item.model}, Price: ${item.finalPrice}, In Stock: ${inStock ? 'Yes' : 'No'}</li>`;
-    });
-    htmlResults += "</ul>";
-
-    return htmlResults;
 }
 
-
-// home page
-app.get('/', function (req, res) {
-    res.sendFile(__dirname + '/index.html');
-});
-
-
-// parts in stock with search
+// Otsing
 app.get('/search', function (req, res) {
     const query = req.query.partName;
-    if (!query) {
-        return res.send('No query specified');
+    
+    if (!query || query.trim() === '') {
+        return res.status(400).json({ error: 'No query specified' });
     }
+
     const searchResults = search(query);
-    res.send(searchResults);
-});
+    
+    if (searchResults.length === 0) {
+        return res.status(404).json({ error: 'No parts found for the given query' });
+    }
 
-// every part that has been/is in storage
-app.get('/spare-parts-all', function (req, res) {
-    let html = '<html><head><title>Spare Parts</title></head><body><h1>Spare Parts</h1><ul>';
-    results.forEach(part => {
-        let inStock = false;
-        if (
-            parseInt(part.storage1) > 0 || 
-            parseInt(part.storage2) > 0 || 
-            parseInt(part.storage3) > 0 || 
-            parseInt(part.storage4) > 0 || 
-            parseInt(part.storage5) > 0 || 
-            parseInt(part.storage6) > 0
-        ) {
-            inStock = true;
-        }
-        html += `<li>Name: ${part.name}, Price: ${part.price}, In Stock: ${inStock ? 'Yes' : 'No'}</li>`;
+    const jsonResults = searchResults.map(item => {  
+        return {
+            name: item.name,
+            model: item.model,
+            finalPrice: item.finalPrice,
+        };
     });
-    html += '</ul></body></html>';
-    res.send(html);
+
+    res.json(jsonResults);
 });
 
+// Kõik jupid ühel lehel
+app.get('/spare-parts-all', function (req, res) {
+    const jsonParts = results.map(part => {
+        return {
+            name: part.name,
+            price: part.price,
+        };
+    });
+    res.json(jsonParts);
+});
 
-// spare parts 30 on a page
+// 30 juppi lehel
 app.get('/spare-parts', function (req, res) {
     const page = parseInt(req.query.page) || 1;
-    const sortOrder = req.query.sort || 'asc'; 
+    const sortOrder = req.query.sort || 'asc';
+    const nameQuery = req.query.name ? req.query.name.toLowerCase() : null; 
+
+    let filteredResults = results;
+    if (nameQuery) {
+        filteredResults = filteredResults.filter(item => item.name && item.name.toLowerCase().includes(nameQuery));
+    }
+
+    const totalPages = Math.ceil(filteredResults.length / itemsPerPage);
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = page * itemsPerPage;
-    const totalPages = Math.ceil(results.length / itemsPerPage);
 
-    let itemsOnPage = results.slice(startIndex, endIndex);
+    let itemsOnPage = filteredResults.slice(startIndex, endIndex);
 
     if (sortOrder === 'asc') {
         itemsOnPage.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
@@ -96,60 +88,26 @@ app.get('/spare-parts', function (req, res) {
         itemsOnPage.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
     }
 
-    let html = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Spare Parts</title>
-        </head>
-        <body>
-            <h1>Spare Parts</h1>
-            <ul>
-    `;
-    itemsOnPage.forEach(item => {
-        let inStock = false;
-        if (
-            parseInt(item.storage1) > 0 || 
-            parseInt(item.storage2) > 0 || 
-            parseInt(item.storage3) > 0 || 
-            parseInt(item.storage4) > 0 || 
-            parseInt(item.storage5) > 0 || 
-            parseInt(item.storage6) > 0
-        ) {
-            inStock = true;
-        }
-        html += `<li>Name: ${item.name}, Model: ${item.model}, In stock: ${inStock ? 'Yes' : 'No'}, Price: ${item.finalPrice} </li>`;
+    const jsonPageResults = itemsOnPage.map(item => {
+        return {
+            name: item.name,
+            model: item.model,
+            price: item.finalPrice,
+            inStock: inStock
+        };
     });
-    html += `
-            </ul>
-    `;
 
-    let nextPage = null; 
-    if (page < totalPages) 
-    { nextPage = `/spare-parts?page=${page + 1}`; } 
+    let nextPage = page < totalPages ? `/spare-parts?page=${page + 1}&name=${nameQuery || ''}` : null;
+    let lastPage = page > 1 ? `/spare-parts?page=${page - 1}&name=${nameQuery || ''}` : null;
 
-    if (page < totalPages) 
-    { lastPage = `/spare-parts?page=${page - 1}`; }
-
-    // go to prev page btn
-    if (lastPage) { html += `<a href="${lastPage}"><button>Last Page</button></a>`; } 
-    // go to next page btn
-    if (nextPage) { html += `<a href="${nextPage}"><button>Next Page</button></a>`; }
- 
-    html += `
-        <div>
-            <a href="/spare-parts?sort=asc"><button>Sort by Price (Low to High)</button></a>
-            <a href="/spare-parts?sort=desc"><button>Sort by Price (High to Low)</button></a>
-        </div>
-    `;
-
-    html += `
-        </body>
-        </html>
-    `;
-    res.send(html);
+    res.json({
+        currentPage: page,
+        totalPages: totalPages,
+        items: jsonPageResults,
+        nextPage: nextPage,
+        lastPage: lastPage,
+        sortOrder: sortOrder
+    });
 });
 
 app.listen(3000, () => {
