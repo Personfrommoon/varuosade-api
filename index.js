@@ -46,26 +46,43 @@ app.get('/search', function (req, res) {
     const jsonResults = searchResults.map(item => {  
         return {
             name: item.name,
-            model: item.model,
+            id: item.id,
+            price: item.price,
             finalPrice: item.finalPrice,
+            model: item.model,
+            storage1: item.storage1,
+            storage2: item.storage2,
+            storage3: item.storage3,
+            storage4: item.storage4,
+            storage5: item.storage5,
+            storage6: item.storage6
         };
     });
 
     res.json(jsonResults);
 });
 
-// Kõik jupid ühel lehel
+// Kõik jupid ühel lehel (localhost:3000/spare-parts-all)
 app.get('/spare-parts-all', function (req, res) {
     const jsonParts = results.map(part => {
         return {
             name: part.name,
+            id: part.id,
             price: part.price,
+            finalPrice: part.finalPrice,
+            model: part.model,
+            storage1: part.storage1,
+            storage2: part.storage2,
+            storage3: part.storage3,
+            storage4: part.storage4,
+            storage5: part.storage5,
+            storage6: part.storage6
         };
     });
     res.json(jsonParts);
 });
 
-// 30 juppi lehel
+// 30 juppi lehel (localhost:3000/spare-parts, localhost:3000/spare-parts?name=... , localhost:3000/spare-parts?sort=asc/desc, localhost:3000/spare-parts?page=2)
 app.get('/spare-parts', function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const sortOrder = req.query.sort || 'asc';
@@ -91,9 +108,16 @@ app.get('/spare-parts', function (req, res) {
     const jsonPageResults = itemsOnPage.map(item => {
         return {
             name: item.name,
+            id: item.id,
+            price: item.price,
+            finalPrice: item.finalPrice,
             model: item.model,
-            price: item.finalPrice,
-            inStock: inStock
+            storage1: item.storage1,
+            storage2: item.storage2,
+            storage3: item.storage3,
+            storage4: item.storage4,
+            storage5: item.storage5,
+            storage6: item.storage6
         };
     });
 
