@@ -3,7 +3,7 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const app = express();
 const results = [];
-const itemsPerPage = 30;
+const partsPerPage = 30;
 
 // CSV shit
 fs.createReadStream('./LE.txt')
@@ -22,9 +22,9 @@ app.get('/', function (req, res) {
 
 // Otsingu func
 function search(query) {
-    return results.filter(item => {
-        const nameMatch = item.name && item.name.toLowerCase().includes(query.toLowerCase());
-        const priceMatch = item.price && item.price.toLowerCase().includes(query.toLowerCase());
+    return results.filter(part => {
+        const nameMatch = part.name && part.name.toLowerCase().includes(query.toLowerCase());
+        const priceMatch = part.price && part.price.toLowerCase().includes(query.toLowerCase());
         return nameMatch || priceMatch;
     });
 }
@@ -43,19 +43,19 @@ app.get('/search', function (req, res) {
         return res.status(404).json({ error: 'No parts found for the given query' });
     }
 
-    const jsonResults = searchResults.map(item => {  
+    const jsonResults = searchResults.map(part => {  
         return {
-            name: item.name,
-            id: item.id,
-            price: item.price,
-            finalPrice: item.finalPrice,
-            model: item.model,
-            storage1: item.storage1,
-            storage2: item.storage2,
-            storage3: item.storage3,
-            storage4: item.storage4,
-            storage5: item.storage5,
-            storage6: item.storage6
+            name: part.name,
+            id: part.id,
+            price: part.price,
+            finalPrice: part.finalPrice,
+            model: part.model,
+            storage1: part.storage1,
+            storage2: part.storage2,
+            storage3: part.storage3,
+            storage4: part.storage4,
+            storage5: part.storage5,
+            storage6: partstorage6
         };
     });
 
@@ -90,34 +90,34 @@ app.get('/spare-parts', function (req, res) {
 
     let filteredResults = results;
     if (nameQuery) {
-        filteredResults = filteredResults.filter(item => item.name && item.name.toLowerCase().includes(nameQuery));
+        filteredResults = filteredResults.filter(part => part.name && part.name.toLowerCase().includes(nameQuery));
     }
 
-    const totalPages = Math.ceil(filteredResults.length / itemsPerPage);
-    const startIndex = (page - 1) * itemsPerPage;
-    const endIndex = page * itemsPerPage;
+    const totalPages = Math.ceil(filteredResults.length / partsPerPage);
+    const startIndex = (page - 1) * partsPerPage;
+    const endIndex = page * partsPerPage;
 
-    let itemsOnPage = filteredResults.slice(startIndex, endIndex);
+    let partsOnPage = filteredResults.slice(startIndex, endIndex);
 
     if (sortOrder === 'asc') {
-        itemsOnPage.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+        partOnPage.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
     } else if (sortOrder === 'desc') {
-        itemsOnPage.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+        partsOnPage.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
     }
 
-    const jsonPageResults = itemsOnPage.map(item => {
+    const jsonPageResults = partsOnPage.map(part => {
         return {
-            name: item.name,
-            id: item.id,
-            price: item.price,
-            finalPrice: item.finalPrice,
-            model: item.model,
-            storage1: item.storage1,
-            storage2: item.storage2,
-            storage3: item.storage3,
-            storage4: item.storage4,
-            storage5: item.storage5,
-            storage6: item.storage6
+            name: part.name,
+            id: part.id,
+            price: part.price,
+            finalPrice: part.finalPrice,
+            model: part.model,
+            storage1: part.storage1,
+            storage2: part.storage2,
+            storage3: part.storage3,
+            storage4: part.storage4,
+            storage5: part.storage5,
+            storage6: part.storage6
         };
     });
 
@@ -127,7 +127,7 @@ app.get('/spare-parts', function (req, res) {
     res.json({
         currentPage: page,
         totalPages: totalPages,
-        items: jsonPageResults,
+        parts: jsonPageResults,
         nextPage: nextPage,
         lastPage: lastPage,
         sortOrder: sortOrder
